@@ -25,7 +25,9 @@ class RespectSanitizer implements SanitizerInterface
     private $defaultOptions = [
         'default' => null,
         'rules' => [],
-        'throw' => null
+        'throw' => null,
+        'throwClass' => null,
+        'throwMessage' => null
     ];
 
     /**
@@ -53,32 +55,34 @@ class RespectSanitizer implements SanitizerInterface
 
     /**
      * Return a failure
-     * @param $throw
-     * @return null
+     * @param $options
      * @throws \Exception
      */
-    private function failure($throw)
+    private function failure($options)
     {
-        if (is_null($throw))
-            return $throw;
+        $throw = $options['throw'];
+
+        if (!is_null($throw))
+            throw $throw;
         else if (is_callable($throw))
             return $throw();
+        else if ($options['throwClass'] !== null)
+            throw new $options['throwClass']($options['throwMessage']);
         else
             throw new \InvalidArgumentException('Invalid Argument');
     }
 
     /**
      * Return a failure or default
-     * @param $throw
-     * @param $default
+     * @param $options
      * @return mixed
      */
-    private function failureNotExists($throw, $default)
+    private function failureNotExists($options)
     {
-        if (is_null($throw))
-            return $default;
+        if (is_null($options['throw']) && is_null($options['throwClass']))
+            return $options['default'];
 
-        return $this->failure($throw);
+        return $this->failure($options);
     }
 
     /**
@@ -87,15 +91,16 @@ class RespectSanitizer implements SanitizerInterface
     public function getInt($key, $options = [])
     {
         $options = array_merge($this->defaultOptions, $options);
+        $options['throwMessage'] = str_replace('{{param}}', $key, $options['throwMessage']);
 
         if (!$this->collection->has($key))
-            return $this->failureNotExists($options['throw'], $options['default']);
+            return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
         // Validate the parameter
         if (!v::intVal()->addRules($options['rules'])->validate($value)) {
-            return $this->failure($options['throw']);
+            return $this->failure($options);
         } else {
             return intval($value);
         }
@@ -109,13 +114,13 @@ class RespectSanitizer implements SanitizerInterface
         $options = array_merge($this->defaultOptions, $options);
 
         if (!$this->collection->has($key))
-            return $this->failureNotExists($options['throw'], $options['default']);
+            return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
         // Validate the parameter
         if (!v::numeric()->addRules($options['rules'])->validate($value)) {
-            return $this->failure($options['throw']);
+            return $this->failure($options);
         } else {
             return doubleval($value);
         }
@@ -129,13 +134,13 @@ class RespectSanitizer implements SanitizerInterface
         $options = array_merge($this->defaultOptions, $options);
 
         if (!$this->collection->has($key))
-            return $this->failureNotExists($options['throw'], $options['default']);
+            return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
         // Validate the parameter
         if (!v::stringType()->notEmpty()->addRules($options['rules'])->validate($value)) {
-            return $this->failure($options['throw']);
+            return $this->failure($options);
         } else {
             return filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
         }
@@ -149,7 +154,7 @@ class RespectSanitizer implements SanitizerInterface
         $options = array_merge($this->defaultOptions, $options);
 
         if (!$this->collection->has($key))
-            return $this->failureNotExists($options['throw'], $options['default']);
+            return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
@@ -159,12 +164,12 @@ class RespectSanitizer implements SanitizerInterface
         // Validate the parameter
         $format = 'Y-m-d H:i:s';
         if (!v::date($format)->addRules($options['rules'])->validate($value)) {
-            return $this->failure($options['throw']);
+            return $this->failure($options);
         } else {
             try {
                 return Date::createFromFormat($format, $value);
             } catch (\Exception $e) {
-                return $this->failure($options['throw']);
+                return $this->failure($options);
             }
         }
     }
@@ -177,13 +182,13 @@ class RespectSanitizer implements SanitizerInterface
         $options = array_merge($this->defaultOptions, $options);
 
         if (!$this->collection->has($key))
-            return $this->failureNotExists($options['throw'], $options['default']);
+            return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
         // Validate the parameter
         if (!v::arrayType()->addRules($options['rules'])->validate($value)) {
-            return $this->failure($options['throw']);
+            return $this->failure($options);
         } else {
             return $value;
         }
@@ -197,13 +202,13 @@ class RespectSanitizer implements SanitizerInterface
         $options = array_merge($this->defaultOptions, $options);
 
         if (!$this->collection->has($key))
-            return $this->failureNotExists($options['throw'], $options['default']);
+            return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
         // Validate the parameter
         if (!v::arrayType()->addRules($options['rules'])->validate($value)) {
-            return $this->failure($options['throw']);
+            return $this->failure($options);
         } else {
             return array_map('intval', $value);
         }
