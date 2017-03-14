@@ -1,0 +1,19 @@
+{
+    "name": "xibosignage/support",
+    "description": "Support Functions for Xibo Signage",
+    "homepage": "http://xibo.org.uk",
+    "authors": [
+        {
+            "name": "Spring Signage Ltd",
+            "homepage": "http://springsignage.com"
+        }
+    ],
+    "require": {
+        "jenssegers/date": "^3.2",
+        "respect/validation": "^1.1",
+        "illuminate/support": "^5.4"
+    },
+    "autoload": {
+        "psr-4": { "Xibo\\" : "src/Xibo" }
+    }
+}
