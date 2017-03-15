@@ -54,6 +54,20 @@ class RespectSanitizer implements SanitizerInterface
     }
 
     /**
+     * Merge options with default options.
+     * @param $options
+     * @param $key
+     * @return array
+     */
+    private function mergeOptions($options, $key)
+    {
+        $options = array_merge($this->defaultOptions, $options);
+        $options['throwMessage'] = str_replace('{{param}}', $key, $options['throwMessage']);
+
+        return $options;
+    }
+
+    /**
      * Return a failure
      * @param $options
      * @throws \Exception
@@ -90,8 +104,7 @@ class RespectSanitizer implements SanitizerInterface
      */
     public function getInt($key, $options = [])
     {
-        $options = array_merge($this->defaultOptions, $options);
-        $options['throwMessage'] = str_replace('{{param}}', $key, $options['throwMessage']);
+        $options = $this->mergeOptions($options, $key);
 
         if (!$this->collection->has($key))
             return $this->failureNotExists($options);
@@ -111,7 +124,7 @@ class RespectSanitizer implements SanitizerInterface
      */
     public function getDouble($key, $options = [])
     {
-        $options = array_merge($this->defaultOptions, $options);
+        $options = $this->mergeOptions($options, $key);
 
         if (!$this->collection->has($key))
             return $this->failureNotExists($options);
@@ -131,7 +144,7 @@ class RespectSanitizer implements SanitizerInterface
      */
     public function getString($key, $options = [])
     {
-        $options = array_merge($this->defaultOptions, $options);
+        $options = $this->mergeOptions($options, $key);
 
         if (!$this->collection->has($key))
             return $this->failureNotExists($options);
@@ -151,7 +164,7 @@ class RespectSanitizer implements SanitizerInterface
      */
     public function getDate($key, $options = [])
     {
-        $options = array_merge($this->defaultOptions, $options);
+        $options = $this->mergeOptions($options, $key);
 
         if (!$this->collection->has($key))
             return $this->failureNotExists($options);
@@ -179,7 +192,7 @@ class RespectSanitizer implements SanitizerInterface
      */
     public function getArray($key, $options = [])
     {
-        $options = array_merge($this->defaultOptions, $options);
+        $options = $this->mergeOptions($options, $key);
 
         if (!$this->collection->has($key))
             return $this->failureNotExists($options);
@@ -199,7 +212,7 @@ class RespectSanitizer implements SanitizerInterface
      */
     public function getIntArray($key, $options = [])
     {
-        $options = array_merge($this->defaultOptions, $options);
+        $options = $this->mergeOptions($options, $key);
 
         if (!$this->collection->has($key))
             return $this->failureNotExists($options);
