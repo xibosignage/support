@@ -77,10 +77,10 @@ class RespectSanitizer implements SanitizerInterface
     {
         $throw = $options['throw'];
 
-        if (!is_null($throw))
+        if (is_callable($throw))
+            $throw();
+        else if (!is_null($throw))
             throw $throw;
-        else if (is_callable($throw))
-            return $throw();
         else if ($options['throwClass'] !== null)
             throw new $options['throwClass']($options['throwMessage']);
         else
