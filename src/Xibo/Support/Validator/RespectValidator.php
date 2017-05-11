@@ -17,7 +17,7 @@ class RespectValidator implements ValidatorInterface
      */
     public function int($value, $rules = [])
     {
-        return v::intVal()->addRules($rules['rules'])->validate($value);
+        return v::intVal()->addRules($rules)->validate($value);
     }
 
     /**
@@ -25,7 +25,7 @@ class RespectValidator implements ValidatorInterface
      */
     public function double($value, $rules = [])
     {
-        return v::numeric()->addRules($rules['rules'])->validate($value);
+        return v::numeric()->addRules($rules)->validate($value);
     }
 
     /**
@@ -33,6 +33,6 @@ class RespectValidator implements ValidatorInterface
      */
     public function string($value, $rules = [])
     {
-        return v::stringType()->addRules($rules['rules'])->validate($value);
+        return v::stringType()->addRules($rules)->validate($value);
     }
 }
