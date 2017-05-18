@@ -162,7 +162,7 @@ class RespectSanitizer implements SanitizerInterface
             return $this->failureNotExists($options);
 
         // Validate the parameter
-        if (!v::stringType()->notEmpty()->addRules($options['rules'])->validate($value)) {
+        if (!v::stringType()->addRules($options['rules'])->validate($value)) {
             return $this->failure($options);
         } else {
             return filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
