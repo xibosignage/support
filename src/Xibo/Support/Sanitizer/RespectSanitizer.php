@@ -24,7 +24,6 @@ class RespectSanitizer implements SanitizerInterface
      */
     private $defaultOptions = [
         'default' => null,
-        'nullAsNotExists' => false,
         'rules' => [],
         'throw' => null,
         'throwClass' => null,
@@ -107,12 +106,14 @@ class RespectSanitizer implements SanitizerInterface
     {
         $options = $this->mergeOptions($options, $key);
 
-        if (!$this->collection->has($key) && !$options['nullAsNotExists'])
+        if (!$this->collection->has($key))
             return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
-        if ($value === null && $options['nullAsNotExists'])
+        // Treat empty string as null for integer types
+        // with the default options this will return the default value of null
+        if ($value === null || $value === '')
             return $this->failureNotExists($options);
 
         // Validate the parameter
@@ -130,12 +131,14 @@ class RespectSanitizer implements SanitizerInterface
     {
         $options = $this->mergeOptions($options, $key);
 
-        if (!$this->collection->has($key) && !$options['nullAsNotExists'])
+        if (!$this->collection->has($key))
             return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
-        if ($value === null && $options['nullAsNotExists'])
+        // Treat empty string as null for double types
+        // with the default options this will return the default value of null
+        if ($value === null || $value === '')
             return $this->failureNotExists($options);
 
         // Validate the parameter
@@ -153,12 +156,12 @@ class RespectSanitizer implements SanitizerInterface
     {
         $options = $this->mergeOptions($options, $key);
 
-        if (!$this->collection->has($key) && !$options['nullAsNotExists'])
+        if (!$this->collection->has($key))
             return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
-        if ($value === null && $options['nullAsNotExists'])
+        if ($value === null)
             return $this->failureNotExists($options);
 
         // Validate the parameter
@@ -176,12 +179,12 @@ class RespectSanitizer implements SanitizerInterface
     {
         $options = $this->mergeOptions($options, $key);
 
-        if (!$this->collection->has($key) && !$options['nullAsNotExists'])
+        if (!$this->collection->has($key))
             return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
-        if ($value === null && $options['nullAsNotExists'])
+        if ($value === null)
             return $this->failureNotExists($options);
 
         if ($value instanceof Date)
@@ -207,12 +210,12 @@ class RespectSanitizer implements SanitizerInterface
     {
         $options = $this->mergeOptions($options, $key);
 
-        if (!$this->collection->has($key) && !$options['nullAsNotExists'])
+        if (!$this->collection->has($key))
             return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
-        if ($value === null && $options['nullAsNotExists'])
+        if ($value === null)
             return $this->failureNotExists($options);
 
         // Validate the parameter
@@ -230,12 +233,12 @@ class RespectSanitizer implements SanitizerInterface
     {
         $options = $this->mergeOptions($options, $key);
 
-        if (!$this->collection->has($key) && !$options['nullAsNotExists'])
+        if (!$this->collection->has($key))
             return $this->failureNotExists($options);
 
         $value = $this->collection->get($key);
 
-        if ($value === null && $options['nullAsNotExists'])
+        if ($value === null)
             return $this->failureNotExists($options);
 
         // Validate the parameter
