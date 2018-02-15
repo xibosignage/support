@@ -70,7 +70,7 @@ class RespectSanitizer implements SanitizerInterface
     /**
      * Return a failure
      * @param $options
-     * @throws \Exception
+     * @throws \InvalidArgumentException
      */
     private function failure($options)
     {
@@ -93,7 +93,7 @@ class RespectSanitizer implements SanitizerInterface
      */
     private function failureNotExists($options)
     {
-        if (is_null($options['throw']) && is_null($options['throwClass']))
+        if (is_null($options['throw']))
             return $options['default'];
 
         return $this->failure($options);
