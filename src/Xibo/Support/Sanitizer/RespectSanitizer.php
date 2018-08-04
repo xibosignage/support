@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo Signage Ltd - http://www.xibosignage.com
- * Copyright (C) 2016 Spring Signage Ltd
+ * Copyright (c) 2018 Xibo Signage Ltd
  * (RespectSanitizer.php)
  */
 
