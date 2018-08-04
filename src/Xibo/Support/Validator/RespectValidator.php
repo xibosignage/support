@@ -1,6 +1,6 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
+ * Xibo Signage Ltd - http://www.xibosignage.com
  * Copyright (C) 2017 Spring Signage Ltd
  * (RespectValidator.php)
  */
