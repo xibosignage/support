@@ -1,13 +1,8 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (RespectSanitizer.php)
+/**
+ * Copyright (c) 2019 Xibo Signage Ltd
  */
-
-
 namespace Xibo\Support\Sanitizer;
-
 
 use Illuminate\Support\Collection;
 use Jenssegers\Date\Date;
