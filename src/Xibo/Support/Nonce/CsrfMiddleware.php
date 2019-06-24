@@ -67,7 +67,7 @@ class CsrfMiddleware
         }
 
         // Pass along so that we can add to the view layer
-        $request
+        $request = $request
             ->withAttribute('csrfKey', $this->key)
             ->withAttribute('csrfToken', $_SESSION[$this->key]);
 
