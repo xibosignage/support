@@ -51,7 +51,11 @@ class CsrfMiddleware
 
             // See if we have a header
             if ($request->hasHeader('X-XSRF-TOKEN')) {
-                $userToken = $request->getHeader('X-XSRF-TOKEN')[0];
+                $userTokens = $request->getHeader('X-XSRF-TOKEN');
+
+                if (count($userTokens) > 0) {
+                    $userToken = $userTokens[0];
+                }
             }
 
             // See if we have a param
