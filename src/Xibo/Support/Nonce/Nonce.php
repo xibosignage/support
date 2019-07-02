@@ -16,6 +16,7 @@ class Nonce
     public $nonce;
     public $action;
     public $expires;
+    public $lookup;
 
     /**
      * A hashed version of the nonce to be persisted
