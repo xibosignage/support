@@ -34,6 +34,7 @@ class Nonce
 
         $this->hashed = $hashedNonce;
         $this->nonce = $nonce;
+        $this->lookup = bin2hex(random_bytes(10));
     }
 
     /**
