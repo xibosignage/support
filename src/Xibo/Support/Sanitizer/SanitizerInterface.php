@@ -31,7 +31,6 @@ interface SanitizerInterface
      * @param string $key The name of the key
      * @param array $options Options to apply to the operation
      * @return int
-     * @throws \Exception
      */
     public function getInt($key, $options = []);
 
@@ -39,7 +38,6 @@ interface SanitizerInterface
      * @param string $key The name of the key
      * @param array $options Options to apply to the operation
      * @return double
-     * @throws \Exception
      */
     public function getDouble($key, $options = []);
 
@@ -47,7 +45,6 @@ interface SanitizerInterface
      * @param string $key The name of the key
      * @param array $options Options to apply to the operation
      * @return string
-     * @throws \Exception
      */
     public function getString($key, $options = []);
 
@@ -55,7 +52,6 @@ interface SanitizerInterface
      * @param string $key The name of the key
      * @param array $options Options to apply to the operation
      * @return Date
-     * @throws \Exception
      */
     public function getDate($key, $options = []);
 
@@ -63,7 +59,6 @@ interface SanitizerInterface
      * @param string $key The name of the key
      * @param array $options Options to apply to the operation
      * @return array
-     * @throws \Exception
      */
     public function getArray($key, $options = []);
 
@@ -71,14 +66,12 @@ interface SanitizerInterface
      * @param string $key The name of the key
      * @param array $options Options to apply to the operation
      * @return int[]
-     * @throws \Exception
      */
     public function getIntArray($key, $options = []);
 
     /**
      * @param string $key The name of the key
      * @return bool
-     * @throws \Exception
      */
     public function getCheckbox($key);
 }
