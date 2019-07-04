@@ -33,7 +33,7 @@ class Nonce implements \JsonSerializable
     {
         if ($json !== null) {
             if (is_string($json)) {
-                $json = json_decode($json);
+                $json = json_decode($json, true);
             }
 
             if (is_array($json)) {
