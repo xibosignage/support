@@ -5,13 +5,14 @@
 
 namespace Xibo\Support\Nonce;
 
+use Xibo\Support\Exception\InvalidArgumentException;
+
 /**
  * Class Nonce
  * @package Xibo\Support\Nonce
  */
-class Nonce
+class Nonce implements \JsonSerializable
 {
-    public $nonceId;
     public $entityId;
     public $nonce;
     public $action;
@@ -26,15 +27,32 @@ class Nonce
 
     /**
      * Nonce constructor.
+     * @param string $json JSON representing the Nonce to create
      */
-    public function __construct()
+    public function __construct($json = null)
     {
-        $nonce = bin2hex(random_bytes(20));
-        $hashedNonce = password_hash($nonce, PASSWORD_DEFAULT);
+        if ($json !== null) {
+            if (is_string($json)) {
+                $json = json_decode($json);
+            }
 
-        $this->hashed = $hashedNonce;
-        $this->nonce = $nonce;
-        $this->lookup = bin2hex(random_bytes(10));
+            if (is_array($json)) {
+                $this->entityId = $json['entityId'];
+                $this->hashed = $json['hashed'];
+                $this->lookup = $json['lookup'];
+                $this->action = $json['action'];
+                $this->expires = $json['expires'];
+            }
+        }
+
+        if ($this->hashed == null) {
+            $nonce = bin2hex(random_bytes(20));
+            $hashedNonce = password_hash($nonce, PASSWORD_DEFAULT);
+
+            $this->hashed = $hashedNonce;
+            $this->nonce = $nonce;
+            $this->lookup = bin2hex(random_bytes(10));
+        }
     }
 
     /**
@@ -68,5 +86,19 @@ class Nonce
 
         // Check to see if the expires time is less than the current time
         return ($this->expires >= time());
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function jsonSerialize()
+    {
+        return json_encode([
+            'entityId' => $this->entityId,
+            'hashed' => $this->hashed,
+            'lookup' => $this->lookup,
+            'action' => $this->action,
+            'expires' => $this->expires
+        ]);
     }
 }
