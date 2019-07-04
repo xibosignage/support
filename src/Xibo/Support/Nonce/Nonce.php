@@ -93,12 +93,12 @@ class Nonce implements \JsonSerializable
      */
     public function jsonSerialize()
     {
-        return json_encode([
+        return [
             'entityId' => $this->entityId,
             'hashed' => $this->hashed,
             'lookup' => $this->lookup,
             'action' => $this->action,
             'expires' => $this->expires
-        ]);
+        ];
     }
 }
