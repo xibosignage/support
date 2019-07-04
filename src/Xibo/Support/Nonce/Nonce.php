@@ -80,7 +80,7 @@ class Nonce implements \JsonSerializable
      */
     public function verify($nonce)
     {
-        if (!password_verify($nonce, $this->nonce)) {
+        if (!password_verify($nonce, $this->hashed)) {
             return false;
         }
 
