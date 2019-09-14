@@ -13,9 +13,19 @@ interface NonceServiceInterface
      * @param $entityId
      * @param $action
      * @param $timeOut
+     * @param int $nonceLength The length of the nonce, default to 20 characters
+     * @param int $lookupLength The length of the lookup, default to 10 characters
+     * @return \Xibo\Support\Nonce\Nonce
+     * @throws \Exception
+     */
+    public function create($entityId, $action, $timeOut, $nonceLength = 20, $lookupLength = 10);
+
+    /**
+     * Hydrate a nonce with JSON/Array
+     * @param string|array $json
      * @return \Xibo\Support\Nonce\Nonce
      */
-    public function create($entityId, $action, $timeOut);
+    public function hydrate($json);
 
     /**
      * Verify a Nonce
@@ -27,6 +37,17 @@ interface NonceServiceInterface
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getVerified($nonce, $lookup, $action);
+
+    /**
+     * Get a nonce, split it and verify
+     * @param $nonce
+     * @param $action
+     * @param string $delimiter
+     * @return \Xibo\Support\Nonce\Nonce
+     * @throws \Xibo\Support\Exception\InvalidNonceException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getSplitVerified($nonce, $action, $delimiter = ':::');
 
     /**
      * Get Nonce

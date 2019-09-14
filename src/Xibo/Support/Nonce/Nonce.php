@@ -26,33 +26,34 @@ class Nonce implements \JsonSerializable
     private $hashed;
 
     /**
-     * Nonce constructor.
-     * @param string $json JSON representing the Nonce to create
+     * Set the nonce
+     * @param int $nonceLength
+     * @param int $lookupLength
+     * @return $this
+     * @throws \Exception
      */
-    public function __construct($json = null)
+    public function setNonce($nonceLength = 20, $lookupLength = 10)
     {
-        if ($json !== null) {
-            if (is_string($json)) {
-                $json = json_decode($json, true);
-            }
-
-            if (is_array($json)) {
-                $this->entityId = $json['entityId'];
-                $this->hashed = $json['hashed'];
-                $this->lookup = $json['lookup'];
-                $this->action = $json['action'];
-                $this->expires = $json['expires'];
-            }
-        }
-
         if ($this->hashed == null) {
-            $nonce = bin2hex(random_bytes(20));
+            $nonce = bin2hex(random_bytes($nonceLength));
             $hashedNonce = password_hash($nonce, PASSWORD_DEFAULT);
 
             $this->hashed = $hashedNonce;
             $this->nonce = $nonce;
-            $this->lookup = bin2hex(random_bytes(10));
+            $this->lookup = bin2hex(random_bytes($lookupLength));
         }
+
+        return $this;
+    }
+
+    /**
+     * Gets the nonce and lookup joined
+     * @param string $delimiter
+     * @return string
+     */
+    public function getCompleteNonce($delimiter = ':::')
+    {
+        return $this->nonce . $delimiter . $this->lookup;
     }
 
     /**
@@ -62,6 +63,16 @@ class Nonce implements \JsonSerializable
     public function getHashed()
     {
         return $this->hashed;
+    }
+
+    /**
+     * @param string $hashed The hashed nonce, usually set when hydrating from existing data
+     * @return $this
+     */
+    public function setHashed($hashed)
+    {
+        $this->hashed = $hashed;
+        return $this;
     }
 
     /**
