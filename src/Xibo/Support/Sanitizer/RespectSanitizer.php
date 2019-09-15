@@ -7,6 +7,7 @@ namespace Xibo\Support\Sanitizer;
 use Illuminate\Support\Collection;
 use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 class RespectSanitizer implements SanitizerInterface
 {
@@ -19,10 +20,12 @@ class RespectSanitizer implements SanitizerInterface
      */
     private $defaultOptions = [
         'default' => null,
+        'defaultOnNotExists' => true,
         'rules' => [],
         'throw' => null,
         'throwClass' => null,
-        'throwMessage' => null
+        'throwMessage' => null,
+        'key' => null
     ];
 
     /**
@@ -58,6 +61,7 @@ class RespectSanitizer implements SanitizerInterface
     {
         $options = array_merge($this->defaultOptions, $options);
         $options['throwMessage'] = str_replace('{{param}}', $key, $options['throwMessage']);
+        $options['key'] = $key;
 
         return $options;
     }
@@ -65,30 +69,32 @@ class RespectSanitizer implements SanitizerInterface
     /**
      * Return a failure
      * @param $options
-     * @throws \InvalidArgumentException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     private function failure($options)
     {
         $throw = $options['throw'];
 
-        if (is_callable($throw))
+        if (is_callable($throw)) {
             $throw();
-        else if (!is_null($throw))
+        } else if (!is_null($throw)) {
             throw $throw;
-        else if ($options['throwClass'] !== null)
+        } else if ($options['throwClass'] !== null) {
             throw new $options['throwClass']($options['throwMessage']);
-        else
-            throw new \InvalidArgumentException('Invalid Argument');
+        } else {
+            throw new InvalidArgumentException($options['throwMessage'], $options['key']);
+        }
     }
 
     /**
      * Return a failure or default
      * @param $options
      * @return mixed
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     private function failureNotExists($options)
     {
-        if (is_null($options['throw']))
+        if (is_null($options['throw']) && $options['defaultOnNotExists'])
             return $options['default'];
 
         return $this->failure($options);
