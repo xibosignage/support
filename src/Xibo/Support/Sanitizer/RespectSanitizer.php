@@ -25,7 +25,8 @@ class RespectSanitizer implements SanitizerInterface
         'throw' => null,
         'throwClass' => null,
         'throwMessage' => null,
-        'key' => null
+        'key' => null,
+        'dateFormat' => 'Y-m-d H:i:s'
     ];
 
     /**
@@ -192,12 +193,11 @@ class RespectSanitizer implements SanitizerInterface
             return $value;
 
         // Validate the parameter
-        $format = 'Y-m-d H:i:s';
-        if (!v::date($format)->addRules($options['rules'])->validate($value)) {
+        if (!v::date($options['dateFormat'])->addRules($options['rules'])->validate($value)) {
             return $this->failure($options);
         } else {
             try {
-                return Date::createFromFormat($format, $value);
+                return Date::createFromFormat($options['dateFormat'], $value);
             } catch (\Exception $e) {
                 return $this->failure($options);
             }
