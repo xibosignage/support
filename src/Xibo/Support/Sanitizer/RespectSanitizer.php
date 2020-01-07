@@ -186,7 +186,7 @@ class RespectSanitizer implements SanitizerInterface
 
         $value = $this->collection->get($key);
 
-        if ($value === null)
+        if ($value == null)
             return $this->failureNotExists($options);
 
         if ($value instanceof Date)
