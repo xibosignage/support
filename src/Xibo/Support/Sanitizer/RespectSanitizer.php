@@ -261,6 +261,6 @@ class RespectSanitizer implements SanitizerInterface
         $value = $this->collection->get($key);
 
         // Validate the parameter
-        return ($value === 'on' || $value === 1 || $value === '1' || $value === 'true' || $value === true);
+        return ($value === 'on' || $value === 1 || $value === '1' || $value === 'true' || $value === true) ? 1 : 0;
     }
 }
