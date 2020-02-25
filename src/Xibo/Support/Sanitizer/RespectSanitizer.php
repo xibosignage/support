@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2019 Xibo Signage Ltd
+ * Copyright (c) 2020 Xibo Signage Ltd
  */
 namespace Xibo\Support\Sanitizer;
 
@@ -262,5 +262,13 @@ class RespectSanitizer implements SanitizerInterface
 
         // Validate the parameter
         return ($value === 'on' || $value === 1 || $value === '1' || $value === 'true' || $value === true) ? 1 : 0;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function hasParam($key)
+    {
+        return $this->collection->has($key);
     }
 }

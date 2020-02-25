@@ -1,8 +1,6 @@
 <?php
-/*
- * Xibo Signage Ltd - http://www.xibosignage.com
- * Copyright (c) 2018 Xibo Signage Ltd
- * (SanitizerInterface.php)
+/**
+ * Copyright (c) 2020 Xibo Signage Ltd
  */
 
 
@@ -71,7 +69,13 @@ interface SanitizerInterface
 
     /**
      * @param string $key The name of the key
-     * @return bool
+     * @return integer
      */
     public function getCheckbox($key);
+
+    /**
+     * @param string $key The name of the key
+     * @return bool
+     */
+    public function hasParam($key);
 }
