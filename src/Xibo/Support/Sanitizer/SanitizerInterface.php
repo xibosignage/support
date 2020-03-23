@@ -69,9 +69,10 @@ interface SanitizerInterface
 
     /**
      * @param string $key The name of the key
-     * @return integer
+     * @param array $options Options to apply to the operation
+     * @return integer|bool
      */
-    public function getCheckbox($key);
+    public function getCheckbox($key, $options = []);
 
     /**
      * @param string $key The name of the key

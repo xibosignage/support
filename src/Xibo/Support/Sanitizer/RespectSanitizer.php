@@ -26,7 +26,8 @@ class RespectSanitizer implements SanitizerInterface
         'throwClass' => null,
         'throwMessage' => null,
         'key' => null,
-        'dateFormat' => 'Y-m-d H:i:s'
+        'dateFormat' => 'Y-m-d H:i:s',
+        'checkboxReturnInteger' => false
     ];
 
     /**
@@ -253,15 +254,18 @@ class RespectSanitizer implements SanitizerInterface
     /**
      * @inheritdoc
      */
-    public function getCheckbox($key)
+    public function getCheckbox($key, $options = [])
     {
+        $options = $this->mergeOptions($options, $key);
+        
         if (!$this->collection->has($key))
             return false;
 
         $value = $this->collection->get($key);
 
         // Validate the parameter
-        return ($value === 'on' || $value === 1 || $value === '1' || $value === 'true' || $value === true) ? 1 : 0;
+        $return = ($value === 'on' || $value === 1 || $value === '1' || $value === 'true' || $value === true);
+        return $options['checkboxReturnInteger'] ? ($return ? 1 : 0) : $return;
     }
 
     /**
