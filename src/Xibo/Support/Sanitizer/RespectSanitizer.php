@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2019 Xibo Signage Ltd
+ * Copyright (c) 2020 Xibo Signage Ltd
  */
 namespace Xibo\Support\Sanitizer;
 
@@ -26,7 +26,8 @@ class RespectSanitizer implements SanitizerInterface
         'throwClass' => null,
         'throwMessage' => null,
         'key' => null,
-        'dateFormat' => 'Y-m-d H:i:s'
+        'dateFormat' => 'Y-m-d H:i:s',
+        'checkboxReturnInteger' => false
     ];
 
     /**
@@ -186,7 +187,7 @@ class RespectSanitizer implements SanitizerInterface
 
         $value = $this->collection->get($key);
 
-        if ($value === null)
+        if ($value == null)
             return $this->failureNotExists($options);
 
         if ($value instanceof Date)
@@ -253,14 +254,25 @@ class RespectSanitizer implements SanitizerInterface
     /**
      * @inheritdoc
      */
-    public function getCheckbox($key)
+    public function getCheckbox($key, $options = [])
     {
+        $options = $this->mergeOptions($options, $key);
+        
         if (!$this->collection->has($key))
             return false;
 
         $value = $this->collection->get($key);
 
         // Validate the parameter
-        return ($value === 'on' || $value === 1 || $value === '1' || $value === 'true' || $value === true);
+        $return = ($value === 'on' || $value === 1 || $value === '1' || $value === 'true' || $value === true);
+        return $options['checkboxReturnInteger'] ? ($return ? 1 : 0) : $return;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function hasParam($key)
+    {
+        return $this->collection->has($key);
     }
 }
