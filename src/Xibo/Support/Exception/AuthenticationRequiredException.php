@@ -6,10 +6,10 @@
 namespace Xibo\Support\Exception;
 
 
-class AccessDeniedException extends GeneralException
+class AuthenticationRequiredException extends GeneralException
 {
     public function getHttpStatusCode()
     {
-        return 403;
+        return 401;
     }
 }
