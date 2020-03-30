@@ -27,7 +27,8 @@ class RespectSanitizer implements SanitizerInterface
         'throwMessage' => null,
         'key' => null,
         'dateFormat' => 'Y-m-d H:i:s',
-        'checkboxReturnInteger' => false
+        'checkboxReturnInteger' => false,
+        'defaultOnEmptyString' => false
     ];
 
     /**
@@ -164,8 +165,9 @@ class RespectSanitizer implements SanitizerInterface
 
         $value = $this->collection->get($key);
 
-        if ($value === null)
+        if ($value === null || ($value === '' && $options['defaultOnEmptyString']) ) {
             return $this->failureNotExists($options);
+        }
 
         // Validate the parameter
         if (!v::stringType()->addRules($options['rules'])->validate($value)) {
