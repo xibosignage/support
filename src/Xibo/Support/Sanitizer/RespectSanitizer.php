@@ -4,8 +4,8 @@
  */
 namespace Xibo\Support\Sanitizer;
 
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -190,7 +190,7 @@ class RespectSanitizer implements SanitizerInterface
         if ($value == null)
             return $this->failureNotExists($options);
 
-        if ($value instanceof Date)
+        if ($value instanceof Carbon)
             return $value;
 
         // Validate the parameter
@@ -198,7 +198,7 @@ class RespectSanitizer implements SanitizerInterface
             return $this->failure($options);
         } else {
             try {
-                return Date::createFromFormat($options['dateFormat'], $value);
+                return Carbon::createFromFormat($options['dateFormat'], $value);
             } catch (\Exception $e) {
                 return $this->failure($options);
             }

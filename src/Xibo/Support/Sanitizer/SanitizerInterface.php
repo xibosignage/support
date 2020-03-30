@@ -8,7 +8,7 @@ namespace Xibo\Support\Sanitizer;
 
 
 use Illuminate\Support\Collection;
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 
 interface SanitizerInterface
 {
@@ -49,7 +49,7 @@ interface SanitizerInterface
     /**
      * @param string $key The name of the key
      * @param array $options Options to apply to the operation
-     * @return Date
+     * @return Carbon
      */
     public function getDate($key, $options = []);
 

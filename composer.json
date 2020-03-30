@@ -15,7 +15,7 @@
         "psr/http-message": "^1.0"
     },
     "suggest": {
-        "jenssegers/date": "If the RespectSanitizer is to be used.",
+        "nesbot/carbon": "If the RespectSanitizer is to be used.",
         "respect/validation": "If the RespectSanitizer is to be used.",
         "monolog/monolog": "If the Monolog Handlers/Processors are to be used"
     },
