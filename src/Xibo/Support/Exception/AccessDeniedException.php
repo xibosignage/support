@@ -8,18 +8,15 @@ namespace Xibo\Support\Exception;
 
 class AccessDeniedException extends GeneralException
 {
-    protected $property;
     protected $help;
 
     /**
      * AccessDeniedException constructor.
      * @param string $message
-     * @param string $property
      * @param string $help
      */
-    public function __construct($message = '', $property = null, $help = null)
+    public function __construct($message = '', $help = null)
     {
-        $this->property = $property;
         $this->help = $help;
 
         parent::__construct($message, 403, null);
@@ -36,7 +33,6 @@ class AccessDeniedException extends GeneralException
     protected function getErrorData()
     {
         return [
-            'property' => $this->property,
             'help' => $this->help
         ];
     }
