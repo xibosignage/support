@@ -260,8 +260,9 @@ class RespectSanitizer implements SanitizerInterface
     {
         $options = $this->mergeOptions($options, $key);
         
-        if (!$this->collection->has($key))
-            return false;
+        if (!$this->collection->has($key)) {
+            return ($options['default'] != null) ? $options['default'] : false;
+        }
 
         $value = $this->collection->get($key);
 
