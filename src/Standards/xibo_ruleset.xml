@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2021 Xibo Signage Ltd
+  -->
+<ruleset name="Xibo Standard">
+    <description>Standards built on PSR2, specifically for the Xibo Signage team</description>
+
+    <!-- Minified files don't have to comply with coding standards. -->
+    <exclude-pattern>*.min.css</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+
+    <!-- Exclude files that do not contain PHP, Javascript or CSS code. -->
+    <exclude-pattern>*.json</exclude-pattern>
+    <exclude-pattern>*.sh</exclude-pattern>
+    <exclude-pattern>*.xml</exclude-pattern>
+    <exclude-pattern>*.yml</exclude-pattern>
+    <exclude-pattern>composer.lock</exclude-pattern>
+
+    <!-- Exclude the `vendor` folder. -->
+    <exclude-pattern>vendor/</exclude-pattern>
+
+    <!-- Include the whole of PSR2 -->
+    <rule ref="PSR2" />
+
+    <!-- Include the double quotes check from Squiz -->
+    <rule ref="Squiz.Strings.DoubleQuoteUsage" />
+
+    <!-- Include some generic functions -->
+    <rule ref="Generic.PHP.ForbiddenFunctions">
+        <properties>
+            <property name="forbiddenFunctions" type="array">
+                <element key="delete" value="unset"/>
+                <element key="print" value="echo"/>
+                <element key="create_function" value="null"/>
+            </property>
+        </properties>
+    </rule>
+</ruleset>
