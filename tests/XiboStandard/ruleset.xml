@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<ruleset name="XiboStandard">
+    <description>Xibo coding standard.</description>
+    <rule ref="PSR2">
+        <!-- Minified files don't have to comply with coding standards. -->
+        <exclude-pattern>*.min.css</exclude-pattern>
+        <exclude-pattern>*.min.js</exclude-pattern>
+
+        <!-- Exclude files that do not contain PHP, Javascript or CSS code. -->
+        <exclude-pattern>*.json</exclude-pattern>
+        <exclude-pattern>*.sh</exclude-pattern>
+        <exclude-pattern>*.xml</exclude-pattern>
+        <exclude-pattern>*.yml</exclude-pattern>
+        <exclude-pattern>composer.lock</exclude-pattern>
+
+        <!-- Exclude the `vendor` folder. -->
+        <exclude-pattern>vendor/</exclude-pattern>
+    </rule>
+</ruleset>
