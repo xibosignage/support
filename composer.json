@@ -16,7 +16,7 @@
     },
     "suggest": {
         "jenssegers/date": "If the RespectSanitizer is to be used.",
-        "respect/validation": "If the RespectSanitizer isXiboStandard to be used.",
+        "respect/validation": "If the RespectSanitizer is to be used.",
         "monolog/monolog": "If the Monolog Handlers/Processors are to be used"
     },
     "autoload": {
