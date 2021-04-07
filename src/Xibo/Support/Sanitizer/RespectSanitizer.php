@@ -259,9 +259,10 @@ class RespectSanitizer implements SanitizerInterface
     public function getCheckbox($key, $options = [])
     {
         $options = $this->mergeOptions($options, $key);
-        
+
         if (!$this->collection->has($key)) {
-            return ($options['default'] != null) ? $options['default'] : false;
+            $return = ($options['default'] != null) ? $options['default'] : false;
+            return $options['checkboxReturnInteger'] ? ($return ? 1 : 0) : $return;
         }
 
         $value = $this->collection->get($key);
