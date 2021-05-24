@@ -18,6 +18,7 @@ class Nonce implements \JsonSerializable
     public $action;
     public $expires;
     public $lookup;
+    public $meta;
 
     /**
      * A hashed version of the nonce to be persisted
@@ -109,7 +110,8 @@ class Nonce implements \JsonSerializable
             'hashed' => $this->hashed,
             'lookup' => $this->lookup,
             'action' => $this->action,
-            'expires' => $this->expires
+            'expires' => $this->expires,
+            'meta' => $this->meta
         ];
     }
 }

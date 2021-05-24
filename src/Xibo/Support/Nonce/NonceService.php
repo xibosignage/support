@@ -21,6 +21,7 @@ abstract class NonceService implements NonceServiceInterface
         $nonce->entityId = $entityId;
         $nonce->action = $action;
         $nonce->expires = time() + $timeOut;
+        $nonce->meta = [];
         return $nonce;
     }
 
@@ -38,6 +39,7 @@ abstract class NonceService implements NonceServiceInterface
             $nonce->lookup = $json['lookup'];
             $nonce->action = $json['action'];
             $nonce->expires = $json['expires'];
+            $nonce->meta = $json['meta'] ?? [];
             $nonce->setHashed($json['hashed']);
         }
 
