@@ -20,7 +20,9 @@
     <exclude-pattern>vendor/</exclude-pattern>
 
     <!-- Include the whole of PSR2 -->
-    <rule ref="PSR2" />
+    <rule ref="PSR2">
+        <exclude name="PSR2.ControlStructures.ElseIfDeclaration" />
+    </rule>
 
     <!-- Include the double quotes check from Squiz -->
     <rule ref="Squiz.Strings.DoubleQuoteUsage" />
