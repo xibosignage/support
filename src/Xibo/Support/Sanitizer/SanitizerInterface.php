@@ -26,6 +26,14 @@ interface SanitizerInterface
     public function setDefaultOptions($options);
 
     /**
+     * Get the raw param from the collection
+     * @param string $key The name of the key
+     * @param array $options Options to apply to the operation
+     * @return mixed
+     */
+    public function getParam($key, $options = []);
+
+    /**
      * @param string $key The name of the key
      * @param array $options Options to apply to the operation
      * @return int

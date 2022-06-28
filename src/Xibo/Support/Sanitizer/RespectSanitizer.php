@@ -73,6 +73,7 @@ class RespectSanitizer implements SanitizerInterface
      * Return a failure
      * @param $options
      * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @return void|\Exception
      */
     private function failure($options)
     {
@@ -101,6 +102,23 @@ class RespectSanitizer implements SanitizerInterface
             return $options['default'];
 
         return $this->failure($options);
+    }
+
+    /** @inheritDoc */
+    public function getParam($key, $options = [])
+    {
+        $options = $this->mergeOptions($options, $key);
+
+        if (!$this->collection->has($key)) {
+            return $this->failureNotExists($options);
+        }
+
+        $value = $this->collection->get($key);
+        if ($value === null || ($value === '' && $options['defaultOnEmptyString'])) {
+            return $this->failureNotExists($options);
+        }
+
+        return $value;
     }
 
     /**
