@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2020 Xibo Signage Ltd
+ * Copyright (c) 2023 Xibo Signage Ltd
  */
 namespace Xibo\Support\Sanitizer;
 
@@ -63,7 +63,9 @@ class RespectSanitizer implements SanitizerInterface
     private function mergeOptions($options, $key)
     {
         $options = array_merge($this->defaultOptions, $options);
-        $options['throwMessage'] = str_replace('{{param}}', $key, $options['throwMessage']);
+        if (!empty($options['throwMessage'])) {
+            $options['throwMessage'] = str_replace('{{param}}', $key, $options['throwMessage']);
+        }
         $options['key'] = $key;
 
         return $options;
@@ -191,7 +193,7 @@ class RespectSanitizer implements SanitizerInterface
         if (!v::stringType()->addRules($options['rules'])->validate($value)) {
             return $this->failure($options);
         } else {
-            return filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+            return htmlspecialchars($value, ENT_NOQUOTES);
         }
     }
 
