@@ -8,6 +8,11 @@
 
 namespace Xibo\Support\Validator;
 
+use Respect\Validation\Factory;
+use Respect\Validation\Rules\AllOf;
+use Respect\Validation\Rules\IntVal;
+use Respect\Validation\Rules\NumericVal;
+use Respect\Validation\Rules\StringType;
 use Respect\Validation\Validator as v;
 
 class RespectValidator implements ValidatorInterface
@@ -17,7 +22,9 @@ class RespectValidator implements ValidatorInterface
      */
     public function int($value, $rules = [])
     {
-        return v::intVal()->addRules($rules)->validate($value);
+        $validator = new AllOf(new IntVal());
+        $this->addRules($validator, $rules);
+        return $validator->validate($value);
     }
 
     /**
@@ -25,7 +32,9 @@ class RespectValidator implements ValidatorInterface
      */
     public function double($value, $rules = [])
     {
-        return v::numeric()->addRules($rules)->validate($value);
+        $validator = new AllOf(new NumericVal());
+        $this->addRules($validator, $rules);
+        return $validator->validate($value);
     }
 
     /**
@@ -33,6 +42,16 @@ class RespectValidator implements ValidatorInterface
      */
     public function string($value, $rules = [])
     {
-        return v::stringType()->addRules($rules)->validate($value);
+        $validator = new AllOf(new StringType());
+        $this->addRules($validator, $rules);
+        return $validator->validate($value);
+    }
+
+    private function addRules(AllOf $validator, $rules): AllOf
+    {
+        foreach ($rules as $ruleName => $arguments) {
+            $validator->addRule(Factory::getDefaultInstance()->rule($ruleName, $arguments));
+        }
+        return $validator;
     }
 }

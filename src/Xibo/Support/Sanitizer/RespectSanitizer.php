@@ -6,7 +6,13 @@ namespace Xibo\Support\Sanitizer;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Respect\Validation\Validator as v;
+use Respect\Validation\Factory;
+use Respect\Validation\Rules\AllOf;
+use Respect\Validation\Rules\ArrayType;
+use Respect\Validation\Rules\Date;
+use Respect\Validation\Rules\IntVal;
+use Respect\Validation\Rules\NumericVal;
+use Respect\Validation\Rules\StringType;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 class RespectSanitizer implements SanitizerInterface
@@ -141,7 +147,10 @@ class RespectSanitizer implements SanitizerInterface
             return $this->failureNotExists($options);
 
         // Validate the parameter
-        if (!v::intVal()->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new IntVal());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             return intval($value);
@@ -166,7 +175,10 @@ class RespectSanitizer implements SanitizerInterface
             return $this->failureNotExists($options);
 
         // Validate the parameter
-        if (!v::numeric()->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new NumericVal());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             return doubleval($value);
@@ -190,7 +202,10 @@ class RespectSanitizer implements SanitizerInterface
         }
 
         // Validate the parameter
-        if (!v::stringType()->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new StringType());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             return htmlspecialchars($value, ENT_NOQUOTES);
@@ -216,7 +231,10 @@ class RespectSanitizer implements SanitizerInterface
             return $value;
 
         // Validate the parameter
-        if (!v::date($options['dateFormat'])->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new Date($options['dateFormat']));
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             try {
@@ -243,7 +261,10 @@ class RespectSanitizer implements SanitizerInterface
             return $this->failureNotExists($options);
 
         // Validate the parameter
-        if (!v::arrayType()->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new ArrayType());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             return $value;
@@ -265,8 +286,11 @@ class RespectSanitizer implements SanitizerInterface
         if ($value === null)
             return $this->failureNotExists($options);
 
+        $validator = new AllOf(new ArrayType());
+        $validator = $this->addRules($validator, $options['rules']);
+
         // Validate the parameter
-        if (!v::arrayType()->addRules($options['rules'])->validate($value)) {
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             return array_map('intval', $value);
@@ -298,5 +322,13 @@ class RespectSanitizer implements SanitizerInterface
     public function hasParam($key)
     {
         return $this->collection->has($key);
+    }
+
+    private function addRules(AllOf $validator, $rules): AllOf
+    {
+        foreach ($rules as $ruleName => $arguments) {
+            $validator->addRule(Factory::getDefaultInstance()->rule($ruleName, $arguments));
+        }
+        return $validator;
     }
 }
