@@ -10,6 +10,7 @@ use Respect\Validation\Factory;
 use Respect\Validation\Rules\AllOf;
 use Respect\Validation\Rules\ArrayType;
 use Respect\Validation\Rules\Date;
+use Respect\Validation\Rules\DateTime;
 use Respect\Validation\Rules\IntVal;
 use Respect\Validation\Rules\NumericVal;
 use Respect\Validation\Rules\StringType;
@@ -231,7 +232,7 @@ class RespectSanitizer implements SanitizerInterface
             return $value;
 
         // Validate the parameter
-        $validator = new AllOf(new Date($options['dateFormat']));
+        $validator = new AllOf(new DateTime($options['dateFormat']));
         $validator = $this->addRules($validator, $options['rules']);
 
         if (!$validator->validate($value)) {

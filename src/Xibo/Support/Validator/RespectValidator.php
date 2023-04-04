@@ -13,7 +13,6 @@ use Respect\Validation\Rules\AllOf;
 use Respect\Validation\Rules\IntVal;
 use Respect\Validation\Rules\NumericVal;
 use Respect\Validation\Rules\StringType;
-use Respect\Validation\Validator as v;
 
 class RespectValidator implements ValidatorInterface
 {
