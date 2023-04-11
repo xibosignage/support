@@ -22,6 +22,13 @@ class InvalidArgumentException extends GeneralException
         $this->property = $property;
         $this->help = $help;
 
+        if (empty($message)) {
+            $message = 'Invalid Argument';
+            if (!empty($property)) {
+                $message .= ' ' . $property;
+            }
+        }
+
         parent::__construct($message, 422, null);
     }
 
