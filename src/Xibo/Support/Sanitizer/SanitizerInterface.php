@@ -84,6 +84,13 @@ interface SanitizerInterface
 
     /**
      * @param string $key The name of the key
+     * @param array $options Options to apply to the operation
+     * @return string
+     */
+    public function getHtml($key, $options = []);
+
+    /**
+     * @param string $key The name of the key
      * @return bool
      */
     public function hasParam($key);
