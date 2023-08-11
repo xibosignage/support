@@ -14,6 +14,8 @@ use Respect\Validation\Rules\DateTime;
 use Respect\Validation\Rules\IntVal;
 use Respect\Validation\Rules\NumericVal;
 use Respect\Validation\Rules\StringType;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 class RespectSanitizer implements SanitizerInterface
@@ -315,6 +317,43 @@ class RespectSanitizer implements SanitizerInterface
         // Validate the parameter
         $return = ($value === 'on' || $value === 1 || $value === '1' || $value === 'true' || $value === true);
         return $options['checkboxReturnInteger'] ? ($return ? 1 : 0) : $return;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getHtml($key, $options = [])
+    {
+        $options = $this->mergeOptions($options, $key);
+
+        if (!$this->collection->has($key)) {
+            return $this->failureNotExists($options);
+        }
+
+        $value = $this->collection->get($key);
+
+        if ($value === null || ($value === '' && $options['defaultOnEmptyString']) ) {
+            return $this->failureNotExists($options);
+        }
+
+        // Validate the parameter
+        $validator = new AllOf(new StringType());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
+            return $this->failure($options);
+        } else {
+            // HTML sanitize
+            // Body elements by default
+            $for = $options['htmlSanitizerFor'] ?? 'body';
+            if (($options['htmlSanitizer'] ?? null) === null) {
+                $htmlSanitizerConfig = $options['htmlSanitizerConfig'] ?? (new HtmlSanitizerConfig())->allowSafeElements();
+                $htmlSanitizer = new HtmlSanitizer($htmlSanitizerConfig);
+            } else {
+                $htmlSanitizer = $options['htmlSanitizer'];
+            }
+            return $htmlSanitizer->sanitizeFor($for, $value);
+        }
     }
 
     /**
