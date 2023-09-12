@@ -211,7 +211,15 @@ class RespectSanitizer implements SanitizerInterface
         if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
-            return htmlspecialchars($value, ENT_NOQUOTES);
+            // we used to use filter_var which has been deprecated.
+            // filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+            // the deprecation notice suggests htmlspecialchars, but that also encodes &<>
+            // we need something which:
+            // Strip tags and HTML-encode double and single quotes, optionally strip or encode special characters.
+            //   Encoding quotes can be disabled by setting FILTER_FLAG_NO_ENCODE_QUOTES
+            // strip_tags should do the same as the old filter_var.
+            // NOTE: we are not relying on this for XSS protection
+            return strip_tags($value);
         }
     }
 
