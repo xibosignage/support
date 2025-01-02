@@ -1,12 +1,21 @@
 <?php
 /**
- * Copyright (c) 2020 Xibo Signage Ltd
+ * Copyright (c) 2023 Xibo Signage Ltd
  */
 namespace Xibo\Support\Sanitizer;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Respect\Validation\Validator as v;
+use Respect\Validation\Factory;
+use Respect\Validation\Rules\AllOf;
+use Respect\Validation\Rules\ArrayType;
+use Respect\Validation\Rules\Date;
+use Respect\Validation\Rules\DateTime;
+use Respect\Validation\Rules\IntVal;
+use Respect\Validation\Rules\NumericVal;
+use Respect\Validation\Rules\StringType;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 class RespectSanitizer implements SanitizerInterface
@@ -63,7 +72,9 @@ class RespectSanitizer implements SanitizerInterface
     private function mergeOptions($options, $key)
     {
         $options = array_merge($this->defaultOptions, $options);
-        $options['throwMessage'] = str_replace('{{param}}', $key, $options['throwMessage']);
+        if (!empty($options['throwMessage'])) {
+            $options['throwMessage'] = str_replace('{{param}}', $key, $options['throwMessage']);
+        }
         $options['key'] = $key;
 
         return $options;
@@ -139,7 +150,10 @@ class RespectSanitizer implements SanitizerInterface
             return $this->failureNotExists($options);
 
         // Validate the parameter
-        if (!v::intVal()->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new IntVal());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             return intval($value);
@@ -164,7 +178,10 @@ class RespectSanitizer implements SanitizerInterface
             return $this->failureNotExists($options);
 
         // Validate the parameter
-        if (!v::numeric()->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new NumericVal());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             return doubleval($value);
@@ -188,10 +205,21 @@ class RespectSanitizer implements SanitizerInterface
         }
 
         // Validate the parameter
-        if (!v::stringType()->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new StringType());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
-            return filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+            // we used to use filter_var which has been deprecated.
+            // filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+            // the deprecation notice suggests htmlspecialchars, but that also encodes &<>
+            // we need something which:
+            // Strip tags and HTML-encode double and single quotes, optionally strip or encode special characters.
+            //   Encoding quotes can be disabled by setting FILTER_FLAG_NO_ENCODE_QUOTES
+            // strip_tags should do the same as the old filter_var.
+            // NOTE: we are not relying on this for XSS protection
+            return strip_tags($value);
         }
     }
 
@@ -214,7 +242,10 @@ class RespectSanitizer implements SanitizerInterface
             return $value;
 
         // Validate the parameter
-        if (!v::date($options['dateFormat'])->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new DateTime($options['dateFormat']));
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             try {
@@ -241,7 +272,10 @@ class RespectSanitizer implements SanitizerInterface
             return $this->failureNotExists($options);
 
         // Validate the parameter
-        if (!v::arrayType()->addRules($options['rules'])->validate($value)) {
+        $validator = new AllOf(new ArrayType());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             return $value;
@@ -263,8 +297,11 @@ class RespectSanitizer implements SanitizerInterface
         if ($value === null)
             return $this->failureNotExists($options);
 
+        $validator = new AllOf(new ArrayType());
+        $validator = $this->addRules($validator, $options['rules']);
+
         // Validate the parameter
-        if (!v::arrayType()->addRules($options['rules'])->validate($value)) {
+        if (!$validator->validate($value)) {
             return $this->failure($options);
         } else {
             return array_map('intval', $value);
@@ -291,10 +328,55 @@ class RespectSanitizer implements SanitizerInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getHtml($key, $options = [])
+    {
+        $options = $this->mergeOptions($options, $key);
+
+        if (!$this->collection->has($key)) {
+            return $this->failureNotExists($options);
+        }
+
+        $value = $this->collection->get($key);
+
+        if ($value === null || ($value === '' && $options['defaultOnEmptyString']) ) {
+            return $this->failureNotExists($options);
+        }
+
+        // Validate the parameter
+        $validator = new AllOf(new StringType());
+        $validator = $this->addRules($validator, $options['rules']);
+
+        if (!$validator->validate($value)) {
+            return $this->failure($options);
+        } else {
+            // HTML sanitize
+            // Body elements by default
+            $for = $options['htmlSanitizerFor'] ?? 'body';
+            if (($options['htmlSanitizer'] ?? null) === null) {
+                $htmlSanitizerConfig = $options['htmlSanitizerConfig'] ?? (new HtmlSanitizerConfig())->allowSafeElements();
+                $htmlSanitizer = new HtmlSanitizer($htmlSanitizerConfig);
+            } else {
+                $htmlSanitizer = $options['htmlSanitizer'];
+            }
+            return $htmlSanitizer->sanitizeFor($for, $value);
+        }
+    }
+
+    /**
      * @inheritdoc
      */
     public function hasParam($key)
     {
         return $this->collection->has($key);
+    }
+
+    private function addRules(AllOf $validator, $rules): AllOf
+    {
+        foreach ($rules as $ruleName => $arguments) {
+            $validator->addRule(Factory::getDefaultInstance()->rule($ruleName, $arguments));
+        }
+        return $validator;
     }
 }
