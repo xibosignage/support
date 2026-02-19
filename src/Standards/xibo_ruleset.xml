@@ -31,7 +31,6 @@
     <rule ref="Generic.Files.LineLength">
         <properties>
             <property name="ignoreComments" value="true"/>
-            <property name="ignoreAnnotations" value="true"/>
         </properties>
     </rule>
 
