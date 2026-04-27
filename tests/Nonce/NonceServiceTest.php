@@ -111,28 +111,13 @@ class NonceServiceTest extends TestCase
         $this->service->getVerified('nonce', 'nonexistent-lookup', 'action');
     }
 
-    /**
-     * @todo Bug: action check uses `!$verifyNonce->action === $action` which is parsed as
-     *       `(!$verifyNonce->action) === $action` due to operator precedence.
-     *       This means the check is always false and action mismatch never throws.
-     *       Fix: change to `$verifyNonce->action !== $action`.
-     */
-    public function testGetVerifiedDoesNotThrowOnActionMismatch_currentBuggedBehavior(): void
+    public function testGetVerifiedThrowsInvalidNonceExceptionOnActionMismatch(): void
     {
+        $this->expectException(InvalidNonceException::class);
         $nonce = $this->service->create(1, 'correct-action', 3600);
         $this->service->store[] = $nonce;
 
-        // Should throw InvalidNonceException, but currently does NOT due to the bug
-        $verified = $this->service->getVerified($nonce->nonce, $nonce->lookup, 'wrong-action');
-        $this->assertSame($nonce, $verified);
-    }
-
-    /**
-     * @todo This test documents the *intended* behavior once the bug is fixed.
-     */
-    public function testGetVerifiedShouldThrowOnActionMismatch_skippedUntilFixed(): void
-    {
-        $this->markTestSkipped('Bug: !$x === $y operator precedence — action check never fires. Fix NonceService line 60.');
+        $this->service->getVerified($nonce->nonce, $nonce->lookup, 'wrong-action');
     }
 
     public function testGetSplitVerifiedSplitsOnDefaultDelimiter(): void
@@ -145,27 +130,13 @@ class NonceServiceTest extends TestCase
         $this->assertSame($nonce, $verified);
     }
 
-    /**
-     * @todo Bug: getSplitVerified ignores the $delimiter parameter and always uses ':::'.
-     *       Fix: change explode(':::', $nonce) to explode($delimiter, $nonce) on line 70.
-     */
-    public function testGetSplitVerifiedIgnoresCustomDelimiter_currentBuggedBehavior(): void
+    public function testGetSplitVerifiedUsesCustomDelimiter(): void
     {
         $nonce = $this->service->create(1, 'action', 3600);
         $this->service->store[] = $nonce;
 
-        // Using '|' as delimiter, but the code always splits on ':::'
-        // So we pass ':::'-delimited string and '|' delimiter — the '|' is silently ignored
-        $complete = $nonce->getCompleteNonce(':::');
+        $complete = $nonce->getCompleteNonce('|');
         $verified = $this->service->getSplitVerified($complete, 'action', '|');
         $this->assertSame($nonce, $verified);
-    }
-
-    /**
-     * @todo This test documents the *intended* behavior once the bug is fixed.
-     */
-    public function testGetSplitVerifiedShouldUseCustomDelimiter_skippedUntilFixed(): void
-    {
-        $this->markTestSkipped('Bug: getSplitVerified ignores $delimiter param. Fix NonceService line 70.');
     }
 }
