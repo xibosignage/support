@@ -39,7 +39,7 @@ class RocketChatHandler extends AbstractProcessingHandler
     }
 
     /** @inheritdoc */
-    protected function write(array $record)
+    protected function write(array $record): void
     {
         $formattedMessage = sprintf(
             "Log channel: *%s*\nLog level: *%s*\n```%s```",

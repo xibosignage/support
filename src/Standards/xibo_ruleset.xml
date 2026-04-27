@@ -27,6 +27,13 @@
     <!-- Include the double quotes check from Squiz -->
     <rule ref="Squiz.Strings.DoubleQuoteUsage" />
 
+    <!-- Override the Generic.Files.LineLength sniff to ignore comments and annotations -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="ignoreComments" value="true"/>
+        </properties>
+    </rule>
+
     <!-- Include some generic functions -->
     <rule ref="Generic.PHP.ForbiddenFunctions">
         <properties>
