@@ -59,9 +59,20 @@ $verified = $nonceService->getSplitVerified($token, 'upload');
 `CsrfMiddleware` is a PSR-7 middleware that validates `X-XSRF-TOKEN` headers (or a body parameter) on POST/PUT/DELETE requests against a session-stored token.
 
 ### Database
-`PdoStorageService` is a PDO/MySQL wrapper with named connection pooling, automatic transaction management on writes, reconnect handling (MySQL error 2006), and deadlock retry logic (errors 1213/1205, max 2 retries):
+`PdoStorageService` is a PDO/MySQL wrapper with named connection pooling, automatic transaction management on writes, reconnect handling (MySQL error 2006 and `ErrorException` "QUERY packet" failures), and deadlock retry logic (errors 1213/1205, max 2 retries).
+
+Connections are opened with native (non-emulated) prepared statements and the `utf8mb4` charset declared in the DSN. Bound parameter values are never written to logs — the SQL string is logged with placeholders intact and parameter keys appear in the log context only.
 
 ```php
+$db = new PdoStorageService($logger, [
+    'host' => 'db.internal:3306',
+    'user' => 'app',
+    'pass' => $secret,
+    'name' => 'app_db',
+    'ssl'  => '/etc/ssl/certs/ca-bundle.crt', // optional, omit or 'none' to disable
+    'sslVerify' => true,                       // optional, default true
+]);
+
 $db->insert('INSERT INTO t (name) VALUES (:name)', [':name' => 'x']);
 $db->commitIfNecessary();
 
@@ -69,6 +80,14 @@ $rows = $db->select('SELECT * FROM t WHERE id = :id', [':id' => 1]);
 
 // Deadlock-safe write with automatic retry
 $db->updateWithDeadlockLoop('UPDATE t SET val = :v WHERE id = :id', [...]);
+
+// Per-call flags: $reconnect (retry on 2006), $transaction (begin txn if none),
+// $close (release the connection after the call). Useful for long-running scripts.
+$db->insert($sql, $params, 'default', false, true, true);
+
+// setTimeZone validates against an allow-list (numeric offsets like '-08:00'
+// or IANA-style names like 'Europe/London'). Anything else throws InvalidArgumentException.
+$db->setTimeZone('Europe/London');
 ```
 
 ### Monolog

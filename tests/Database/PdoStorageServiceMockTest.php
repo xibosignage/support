@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Xibo\Support\Database\PdoStorageService;
 use Xibo\Support\Exception\DeadLockException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Allows injecting specific PDO instances per connection name.
@@ -15,7 +16,7 @@ class InjectablePdoStorageService extends PdoStorageService
     /** @var array<string, \PDO> */
     public array $injectedConnections = [];
 
-    public function connect($host, $user, $pass, $name = null): \PDO
+    public function connect($host, $user, $pass, $name = null, $ssl = null, $sslVerify = true): \PDO
     {
         // Pop the next injected connection for any name requested
         if (!empty($this->injectedConnections)) {
@@ -302,5 +303,262 @@ class PdoStorageServiceMockTest extends TestCase
         $svc->injectedConnections[] = $pdo;
 
         $svc->setTimeZone('UTC');
+    }
+
+    public function testSetTimeZoneAcceptsNumericOffset(): void
+    {
+        $pdo = $this->createMock(\PDO::class);
+        $pdo->expects($this->once())
+            ->method('query')
+            ->with("SET time_zone = '-08:00';");
+
+        $svc = $this->service();
+        $svc->injectedConnections[] = $pdo;
+
+        $svc->setTimeZone('-08:00');
+    }
+
+    public function testSetTimeZoneAcceptsIanaName(): void
+    {
+        $pdo = $this->createMock(\PDO::class);
+        $pdo->expects($this->once())
+            ->method('query')
+            ->with("SET time_zone = 'Europe/London';");
+
+        $svc = $this->service();
+        $svc->injectedConnections[] = $pdo;
+
+        $svc->setTimeZone('Europe/London');
+    }
+
+    /** @dataProvider timeZoneInjectionPayloadProvider */
+    public function testSetTimeZoneRejectsMaliciousInput(string $payload): void
+    {
+        $svc = $this->service();
+        // No injectedConnections — if validation passes, openConnection() will throw.
+
+        $this->expectException(InvalidArgumentException::class);
+        $svc->setTimeZone($payload);
+    }
+
+    public static function timeZoneInjectionPayloadProvider(): array
+    {
+        return [
+            ["UTC'; DROP TABLE users; --"],
+            ['UTC; DROP'],
+            ['UTC OR 1=1'],
+            ["UTC' --"],
+            [''],
+            [' '],
+            ['UTC UTC'],
+            ['UTC\\'],
+            ['/etc/passwd'],
+            ['1UTC'],
+        ];
+    }
+
+    // ------------------------------------------------------------------
+    // ErrorException reconnect path
+    // ------------------------------------------------------------------
+
+    /**
+     * Helper: a PDO whose statement throws \ErrorException on execute.
+     */
+    private function mockPdoThatThrowsErrorExceptionOnExecute(): \PDO
+    {
+        $stmt = $this->createMock(\PDOStatement::class);
+        $stmt->method('execute')->willThrowException(
+            new \ErrorException('Error while sending QUERY packet.')
+        );
+
+        $pdo = $this->createMock(\PDO::class);
+        $pdo->method('prepare')->willReturn($stmt);
+        $pdo->method('inTransaction')->willReturn(false);
+        $pdo->method('beginTransaction')->willReturn(true);
+        return $pdo;
+    }
+
+    public function testSelectReconnectsOnErrorException(): void
+    {
+        $svc = $this->service();
+        $svc->injectedConnections[] = $this->mockPdoThatThrowsErrorExceptionOnExecute();
+        $svc->injectedConnections[] = $this->mockPdoThatSucceeds();
+
+        $rows = $svc->select('SELECT * FROM t', [], 'default', true);
+        $this->assertIsArray($rows);
+    }
+
+    public function testInsertReconnectsOnErrorException(): void
+    {
+        $svc = $this->service();
+        $svc->injectedConnections[] = $this->mockPdoThatThrowsErrorExceptionOnExecute();
+        $svc->injectedConnections[] = $this->mockPdoThatSucceeds();
+
+        $id = $svc->insert('INSERT INTO t (x) VALUES (:x)', [':x' => 1], 'default', true);
+        $this->assertSame(42, $id);
+    }
+
+    public function testUpdateReconnectsOnErrorException(): void
+    {
+        $svc = $this->service();
+        $svc->injectedConnections[] = $this->mockPdoThatThrowsErrorExceptionOnExecute();
+        $svc->injectedConnections[] = $this->mockPdoThatSucceeds();
+
+        $rows = $svc->update('UPDATE t SET x = :x', [':x' => 1], 'default', true);
+        $this->assertSame(1, $rows);
+    }
+
+    public function testExistsReconnectsOnErrorException(): void
+    {
+        $svc = $this->service();
+        $svc->injectedConnections[] = $this->mockPdoThatThrowsErrorExceptionOnExecute();
+        $svc->injectedConnections[] = $this->mockPdoThatSucceeds();
+
+        $result = $svc->exists('SELECT 1', [], 'default', true);
+        $this->assertTrue($result);
+    }
+
+    public function testIsolatedReconnectsOnErrorException(): void
+    {
+        $svc = $this->service();
+        $svc->injectedConnections[] = $this->mockPdoThatThrowsErrorExceptionOnExecute();
+        $svc->injectedConnections[] = $this->mockPdoThatSucceeds();
+
+        $svc->isolated('INSERT INTO t (x) VALUES (:x)', [':x' => 1], 'isolated', true);
+        $this->assertTrue(true); // no exception = success
+    }
+
+    public function testSelectRethrowsErrorExceptionWhenReconnectFalse(): void
+    {
+        $svc = $this->service();
+        $svc->injectedConnections[] = $this->mockPdoThatThrowsErrorExceptionOnExecute();
+
+        $this->expectException(\ErrorException::class);
+        $svc->select('SELECT 1', [], 'default', false);
+    }
+
+    // ------------------------------------------------------------------
+    // $transaction flag
+    // ------------------------------------------------------------------
+
+    public function testInsertWithTransactionFalseSkipsBeginTransaction(): void
+    {
+        $stmt = $this->createMock(\PDOStatement::class);
+        $stmt->method('execute')->willReturn(true);
+
+        $pdo = $this->createMock(\PDO::class);
+        $pdo->method('prepare')->willReturn($stmt);
+        $pdo->method('lastInsertId')->willReturn('1');
+        $pdo->expects($this->never())->method('beginTransaction');
+        $pdo->expects($this->never())->method('inTransaction');
+
+        $svc = $this->service();
+        $svc->injectedConnections[] = $pdo;
+
+        $svc->insert('INSERT INTO t (x) VALUES (:x)', [':x' => 1], 'default', false, false);
+    }
+
+    public function testUpdateWithTransactionFalseSkipsBeginTransaction(): void
+    {
+        $stmt = $this->createMock(\PDOStatement::class);
+        $stmt->method('execute')->willReturn(true);
+        $stmt->method('rowCount')->willReturn(1);
+
+        $pdo = $this->createMock(\PDO::class);
+        $pdo->method('prepare')->willReturn($stmt);
+        $pdo->expects($this->never())->method('beginTransaction');
+        $pdo->expects($this->never())->method('inTransaction');
+
+        $svc = $this->service();
+        $svc->injectedConnections[] = $pdo;
+
+        $svc->update('UPDATE t SET x = :x', [':x' => 1], 'default', false, false);
+    }
+
+    public function testDeadlockLoopWithTransactionFalseSkipsBeginTransaction(): void
+    {
+        $stmt = $this->createMock(\PDOStatement::class);
+        $stmt->method('execute')->willReturn(true);
+
+        $pdo = $this->createMock(\PDO::class);
+        $pdo->method('prepare')->willReturn($stmt);
+        $pdo->expects($this->never())->method('beginTransaction');
+        $pdo->expects($this->never())->method('inTransaction');
+
+        $svc = $this->service();
+        $svc->injectedConnections[] = $pdo;
+
+        $svc->updateWithDeadlockLoop('UPDATE t SET x = 1', [], 'default', false);
+    }
+
+    // ------------------------------------------------------------------
+    // $close flag
+    // ------------------------------------------------------------------
+
+    public function testSelectWithCloseFlagClosesConnectionAfterQuery(): void
+    {
+        $svc = $this->service();
+        $svc->injectedConnections[] = $this->mockPdoThatSucceeds();
+
+        $svc->select('SELECT 1', [], 'default', false, true);
+
+        // After close, getConnection() must request a new connection — and we
+        // queue another mock so it succeeds.
+        $svc->injectedConnections[] = $this->mockPdoThatSucceeds();
+        $svc->select('SELECT 2', [], 'default', false, false);
+        $this->assertEmpty($svc->injectedConnections, 'Both injected connections should have been consumed');
+    }
+
+    // ------------------------------------------------------------------
+    // SQL syntax-error logging (1064)
+    // ------------------------------------------------------------------
+
+    public function testSelectLogsSqlAtErrorLevelOnSyntaxError(): void
+    {
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+        $logger->expects($this->atLeastOnce())->method('error');
+
+        $svc = $this->service($logger);
+        $svc->injectedConnections[] = $this->mockPdoThatThrowsOnExecute($this->pdoException(1064));
+
+        try {
+            $svc->select('NOT VALID SQL', []);
+            $this->fail('Expected PDOException');
+        } catch (\PDOException) {
+            // expected
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Parameter redaction in logSql
+    // ------------------------------------------------------------------
+
+    public function testLogSqlDoesNotLeakParameterValues(): void
+    {
+        $captured = [];
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+        $logger->method('debug')->willReturnCallback(
+            function ($message, $context = []) use (&$captured): void {
+                $captured[] = ['message' => $message, 'context' => $context];
+            }
+        );
+
+        $svc = $this->service($logger);
+        $svc->injectedConnections[] = $this->mockPdoThatSucceeds();
+
+        $svc->select(
+            'SELECT * FROM users WHERE password = :secret',
+            [':secret' => 'hunter2-very-sensitive-value']
+        );
+
+        $this->assertNotEmpty($captured);
+        foreach ($captured as $entry) {
+            $serialised = $entry['message'] . ' ' . json_encode($entry['context']);
+            $this->assertStringNotContainsString(
+                'hunter2-very-sensitive-value',
+                $serialised,
+                'Logger output must not contain raw parameter values'
+            );
+        }
     }
 }

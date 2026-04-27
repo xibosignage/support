@@ -11,7 +11,7 @@ use Xibo\Support\Database\PdoStorageService;
  */
 class SqlitePdoStorageService extends PdoStorageService
 {
-    public function connect($host, $user, $pass, $name = null): \PDO
+    public function connect($host, $user, $pass, $name = null, $ssl = null, $sslVerify = true): \PDO
     {
         $pdo = new \PDO('sqlite::memory:');
         $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -212,5 +212,39 @@ class PdoStorageServiceSqliteTest extends TestCase
             'CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)'
         );
         $service->select("SELECT 1", []);
+    }
+
+    public function testSelectWithCloseFlagDiscardsConnection(): void
+    {
+        $original = $this->service->getConnection('default');
+        $this->service->select("SELECT 1", [], 'default', false, true);
+        // After close=true, the next getConnection() must return a NEW PDO instance.
+        $next = $this->service->getConnection('default');
+        $this->assertNotSame($original, $next);
+
+        // Re-bootstrap the schema for tearDown / subsequent tests in this method.
+        $next->exec('CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)');
+    }
+
+    public function testInsertWithTransactionFalseLeavesNoTransactionOpen(): void
+    {
+        $this->service->insert(
+            "INSERT INTO items (name) VALUES (:name)",
+            [':name' => 'NoTxn'],
+            'default',
+            false,
+            false
+        );
+        $this->assertFalse($this->service->getConnection('default')->inTransaction());
+    }
+
+    public function testCommitIfNecessaryWithCloseFlagDiscardsConnection(): void
+    {
+        $original = $this->service->getConnection('default');
+        $this->service->insert("INSERT INTO items (name) VALUES (:name)", [':name' => 'CloseMe']);
+        $this->service->commitIfNecessary('default', true);
+        $next = $this->service->getConnection('default');
+        $this->assertNotSame($original, $next);
+        $next->exec('CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL)');
     }
 }
