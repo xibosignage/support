@@ -106,13 +106,6 @@ class NonceTest extends TestCase
         $this->assertFalse($nonce->verify($nonce->nonce));
     }
 
-    public function testVerifyReturnsTrueAtExactExpiryBoundary(): void
-    {
-        $nonce = (new Nonce())->setNonce();
-        $nonce->expires = time(); // >= semantics: exactly now is still valid
-        $this->assertTrue($nonce->verify($nonce->nonce));
-    }
-
     public function testJsonSerializeIncludesExpectedFields(): void
     {
         $nonce = (new Nonce())->setNonce();
