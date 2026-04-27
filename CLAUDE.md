@@ -12,11 +12,15 @@ This is `xibosignage/support`, a PHP utility library that provides reusable supp
 # Install dependencies
 composer install
 
-# Run code style checks (PSR-2 based, with Xibo customisations)
-vendor/bin/phpcs --standard=src/Standards/xibo_ruleset.xml src/
-```
+# Run tests
+composer test
 
-There is no automated test suite in this repository — correctness is validated by the consuming applications.
+# Run tests with coverage report (requires Xdebug)
+composer test:coverage
+
+# Run code style checks (PSR-2 based, with Xibo customisations)
+composer lint
+```
 
 ## Architecture
 
@@ -48,4 +52,15 @@ The custom PHPCS ruleset at `src/Standards/xibo_ruleset.xml` extends PSR-2 with:
 - Line length checks ignore comments
 - `ElseIfDeclaration` rule excluded
 
-PHP platform target is **8.1+**.
+PHP platform target is **8.1+**; CI runs against **8.4**.
+
+### Test Suite
+
+Tests live under `tests/` and mirror the `src/Xibo/Support/` module structure. Key notes:
+
+- `tests/Database/PdoStorageServiceSqliteTest.php` uses SQLite in-memory via a `connect()` override — no MySQL needed for the happy-path tests.
+- `tests/Database/PdoStorageServiceMockTest.php` mocks PDO to exercise reconnect (error 2006) and deadlock retry (errors 1213/1205) paths.
+- `tests/Nonce/CsrfMiddlewareTest.php` saves and restores `$_SESSION` in setUp/tearDown rather than using process isolation.
+- `RespectSanitizer::getString` uses `strip_tags` (removes tags, does not encode entities). `getHtml` uses Symfony HtmlSanitizer (preserves safe tags). These behave differently and have separate tests.
+- `getCheckbox` never throws and uses loose `!= null` comparison for the `default` option — see test comments.
+- `getDate` uses loose `== null` for the missing-value check (so empty string is treated as missing), unlike the other getters which use strict `===`.
