@@ -57,7 +57,7 @@ abstract class NonceService implements NonceServiceInterface
         }
 
         // Verify the action
-        if (!$verifyNonce->action === $action) {
+        if ($verifyNonce->action !== $action) {
             throw new InvalidNonceException();
         }
 
@@ -67,7 +67,7 @@ abstract class NonceService implements NonceServiceInterface
     /** @inheritDoc */
     public final function getSplitVerified($nonce, $action, $delimiter = ':::')
     {
-        $parts = explode(':::', $nonce);
+        $parts = explode($delimiter, $nonce);
         return $this->getVerified($parts[0], $parts[1], $action);
     }
 }
