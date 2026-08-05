@@ -7,7 +7,9 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
+use Monolog\Level;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 use Xibo\Support\Monolog\Handler\RocketChatHandler;
 
@@ -26,18 +28,17 @@ class RocketChatHandlerTest extends TestCase
         return new RocketChatHandler('https://example.com/webhook', $client, $level);
     }
 
-    private function makeRecord(string $channel, int $level, string $levelName, string $message): array
+    private function makeRecord(string $channel, int $level, string $levelName, string $message): LogRecord
     {
-        return [
-            'channel'    => $channel,
-            'level'      => $level,
-            'level_name' => $levelName,
-            'message'    => $message,
-            'context'    => [],
-            'extra'      => [],
-            'datetime'   => new \DateTimeImmutable(),
-            'formatted'  => $message,
-        ];
+        return new LogRecord(
+            datetime: new \DateTimeImmutable(),
+            channel: $channel,
+            level: Level::from($level),
+            message: $message,
+            context: [],
+            extra: [],
+            formatted: $message,
+        );
     }
 
     public function testWritePostsToConfiguredUrl(): void

@@ -5,16 +5,14 @@
 
 namespace Xibo\Support\Monolog\Processor;
 
+use Monolog\LogRecord;
+use Monolog\Processor\ProcessorInterface;
 
-class ProxyIpProcessor
+class ProxyIpProcessor implements ProcessorInterface
 {
-    /**
-     * @param  array $record
-     * @return array
-     */
-    public function __invoke(array $record)
+    public function __invoke(LogRecord $record): LogRecord
     {
-        $record['extra']['clientIp'] = self::getIp();
+        $record->extra['clientIp'] = self::getIp();
 
         return $record;
     }

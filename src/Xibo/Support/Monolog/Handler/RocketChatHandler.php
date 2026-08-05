@@ -9,6 +9,7 @@ namespace Xibo\Support\Monolog\Handler;
 use GuzzleHttp\Client;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use Monolog\LogRecord;
 
 class RocketChatHandler extends AbstractProcessingHandler
 {
@@ -39,18 +40,18 @@ class RocketChatHandler extends AbstractProcessingHandler
     }
 
     /** @inheritdoc */
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         $formattedMessage = sprintf(
             "Log channel: *%s*\nLog level: *%s*\n```%s```",
-            $record['channel'], $record['level_name'], $record['message']
+            $record->channel, $record->level->getName(), $record->message
         );
 
         $this->client->request('POST', $this->url, [
             'json' => [
                 'text' => $formattedMessage,
                 'attachments' => [
-                    'color' => $this->getAlertColor($record['level']),
+                    'color' => $this->getAlertColor($record->level->value),
                 ]
             ]
         ]);
